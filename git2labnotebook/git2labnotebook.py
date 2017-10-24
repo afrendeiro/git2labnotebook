@@ -8,6 +8,12 @@ from argparse import ArgumentParser
 
 import git
 import pandas as pd
+from pkg_resources import resource_filename
+
+try:
+    import pypandoc
+except ImportError:
+    print("PDF output requires pandoc and pypandoc installed. Will not output PDF.")
 
 
 def valid_date(s):
@@ -126,7 +132,7 @@ def parse_git_log_stats(log):
         entries, columns=["hash", "author", "date", "message", "file_name", "change_type", "change"])
 
 
-def gitlog2text(git_log, min_day=None, max_day=None, daily_summary=True, fill_messages=False):
+def gitlog_to_markdown(git_log, min_day=None, max_day=None, daily_summary=True, fill_messages=False):
     """
     """
     t_day_header = """# {date}\n"""
@@ -184,6 +190,29 @@ def gitlog2text(git_log, min_day=None, max_day=None, daily_summary=True, fill_me
     return text
 
 
+def markdown_to_docx(markdown_input, pdf_output):
+    try:
+        pypandoc.convert_file(
+            markdown_input, 'docx',
+            outputfile=pdf_output,
+            extra_args=["--reference-docx={}".format(
+                resource_filename("git2labnotebook", os.path.join("pandoc_templates", "reference.docx")))])
+    except RuntimeError as e:
+        print("Conversion to DOCX failed:")
+        print(e)
+
+
+def markdown_to_pdf(markdown_input, pdf_output):
+    try:
+        pypandoc.convert_file(
+            markdown_input, 'latex',
+            outputfile=pdf_output,
+            extra_args=["--latex-engine=xelatex", '-V', 'geometry:margin=3cm', '-V', 'fontsize=10pt'])
+    except RuntimeError as e:
+        print("Conversion to PDF failed:")
+        print(e)
+
+
 def main():
     # Parse command-line arguments
     args, _ = parse_arguments()
@@ -204,14 +233,18 @@ def main():
         os.makedirs(args.output_dir)
     git_log.to_csv(os.path.join(args.output_dir, "git_log.csv"), index=False, encoding="utf-8")
 
-    # Make text
-    text = gitlog2text(
+    # Make entries in markdown
+    text = gitlog_to_markdown(
         git_log,
         min_day=args.date_from, max_day=args.date_to,
         daily_summary=args.daily_summary, fill_messages=args.fill)
 
     with open(os.path.join(args.output_dir, "notebook.md"), "w") as handle:
         handle.writelines("\n".join(text))
+
+    # Output
+    markdown_to_docx(args.output_dir, "notebook.md"), args.output_dir, "notebook.docx"))
+    markdown_to_pdf(args.output_dir, "notebook.md"), args.output_dir, "notebook.pdf"))
 
 
 if __name__ == '__main__':

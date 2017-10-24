@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import sys
+import os
 
 # take care of extra required modules depending on Python version
 extra = {}
@@ -36,11 +37,19 @@ setup(
     url="https://github.com/afrendeiro/git2labnotebook",
     author=u"Andre Rendeiro",
     license="GPL2",
-    install_requires=["pandas", "gitpython"],
+    install_requires=["pandas", "gitpython", "pypandoc"],
     entry_points={
         "console_scripts": [
             'git2labnotebook = git2labnotebook.git2labnotebook:main'
         ],
     },
+    package_data={
+        'git2labnotebook': [
+            "../README.md",
+            "../LICENSE",
+            "../MANIFEST.in",
+            os.path.join('pandoc_templates', 'reference.docx')]
+    },
+    include_package_data=True,
     **extra
 )
