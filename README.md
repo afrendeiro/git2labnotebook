@@ -39,5 +39,7 @@ git2labnotebook -f 20140915 -t 20170915 -d /home/afr/workspace/
 
 ```
 
-## Upcoming features
- Using `pandoc` to create latex/pdf/docx output.
+## Features
+If `pandoc` is installed, conversion to DOCX and PDF (through Latex) formats will be performed.
+DOCX has a sensible template so it's ready to print.
+A nice Latex template will follow!
